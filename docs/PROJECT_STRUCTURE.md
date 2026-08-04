@@ -1,85 +1,47 @@
-# PROJECT-STRUCTURE.md — FocusFlow Folder Structure (Updated Day 5)
+# PROJECT-STRUCTURE.md — FocusFlow Folder Structure (Updated Day 6)
 
-**Status:** AI parsing (rule-based interim) + Task Input/Review UI complete.
+**Status: MVP complete and deployed.**
 
----
-
-## 1. Top-Level Structure (unchanged)
-
+## `client/src/`
 ```
-focusflow/
-├── client/
-├── server/
-├── docs/
-├── .gitignore
-└── README.md
-```
-
-## 2. `client/` — Updated
-
-```
-client/
-├── src/
-│   ├── components/
-│   │   ├── NavTabs.jsx              ✅ Day 3
-│   │   ├── TaskInput.jsx             ✅ Built Day 5 — free-text entry
-│   │   ├── ParsedTaskReview.jsx      ✅ Built Day 5 — editable review before save
-│   │   ├── TodaysPlan.jsx            🔜 Day 6
-│   │   ├── AllTasks.jsx              🔜 Day 7
-│   │   ├── StreakBadge.jsx           🔜 Day 7
-│   │   └── ErrorBoundary.jsx         🔜 Day 8
-│   ├── api/
-│   │   └── client.js                 ✅ Updated Day 5 — added parseTasks(), createTask(), fetchTasks()
-│   ├── App.jsx                        ✅ Updated Day 5 — view-state machine: plan/all/input/review
-│   ├── App.css                        ✅ Updated Day 5 — form + review styling
-│   └── main.jsx                       ✅ Day 3
-├── package.json                        ✅ Day 3
-└── .env.production                     🔜 Day 9
+components/
+  NavTabs.jsx              ✅ Day 3
+  TaskInput.jsx             ✅ Day 5
+  ParsedTaskReview.jsx      ✅ Day 5
+  TodaysPlan.jsx            ✅ Built Day 6
+  AllTasks.jsx              ✅ Built Day 6
+  StreakBadge.jsx           ✅ Built Day 6
+  ErrorBoundary.jsx         🔜 Day 8
+api/client.js                ✅ Updated Day 6 — added updateTask, deleteTask, generatePlan, getStreak
+App.jsx                       ✅ Updated Day 6 — full MVP wiring + required footer
+App.css                       ✅ Updated Day 6 — plan/task/streak/footer styling
 ```
 
-## 3. `server/` — Updated
-
+## `server/`
 ```
-server/
-├── routes/
-│   ├── tasks.js               ✅ Day 4
-│   ├── parseTasks.js           ✅ Built Day 5 — POST /api/parse-tasks
-│   ├── generatePlan.js         🔜 Day 6
-│   └── streak.js               🔜 Day 7
-├── store/
-│   ├── taskStore.js            ✅ Day 3
-│   ├── tasks.json               ✅ Holds real saved task data
-│   └── streak.json              🔜 Day 7
-├── lib/
-│   ├── claudeClient.js          ✅ Day 3, still unused — real API not wired in yet
-│   ├── mockParser.js            ✅ Built Day 5 — free interim parser, swappable for Claude later
-│   └── prompts.js                🔜 When Claude API is wired in
-├── index.js                      ✅ Updated Day 5 — registers parseTasks router
-├── package.json                  ✅ Day 3
-├── .env                           ✅ Day 3
-└── .env.example                   ✅ Day 3
+routes/
+  tasks.js               ✅ Updated Day 6 — streak trigger on completion
+  parseTasks.js            ✅ Day 5
+  generatePlan.js           ✅ Built Day 6
+  streak.js                 ✅ Built Day 6
+store/
+  taskStore.js              ✅ Day 3
+  tasks.json                 ✅ Live data
+  streakStore.js             ✅ Built Day 6
+  streak.json                 ✅ Built Day 6
+lib/
+  claudeClient.js             ✅ Day 3, still unused
+  mockParser.js                ✅ Day 5
+index.js                        ✅ Updated Day 6 — all 4 routers registered
+.env.production (client)         ✅ Built Day 6 — VITE_API_BASE_URL set to Render URL
 ```
 
-## 4. `docs/` — Updated
+## `docs/`
+All prior docs unchanged and current. Added: `DAY6-SUMMARY.md`.
 
-```
-docs/
-├── PRD.md                        ✅ Day 1
-├── Implementation_Blueprint.md    ✅ Day 1
-├── Pitch_Deck.pptx                ✅ Day 1
-├── ARCHITECTURE.md                ✅ Day 2 (AI section note: currently rule-based, see DAY5-SUMMARY.md)
-├── SCHEMA.md                      ✅ Day 2
-├── API.md                         ✅ Day 2 — /api/parse-tasks implemented to exact spec
-├── UI-WIREFRAMES.md               ✅ Day 2 — Task Input & Review screens now built
-├── PROJECT-STRUCTURE.md           ✅ Updated Day 5 (this file)
-├── SETUP.md                       ✅ Day 3
-├── ENVIRONMENT.md                 ✅ Day 3
-├── DAY3-SUMMARY.md                ✅ Day 3
-├── DAY4-SUMMARY.md                ✅ Day 4
-├── DAY5-SUMMARY.md                ✅ Day 5
-└── retrospective.md               🔜 Day 10
-```
+## Deployment (new today)
+- **Backend:** Render (free tier) — `https://[your-render-url].onrender.com`
+- **Frontend:** Vercel (free tier) — `https://[your-vercel-url].vercel.app`
 
-## 5. What Changed From Day 4
-
-New: `mockParser.js`, `parseTasks.js`, `TaskInput.jsx`, `ParsedTaskReview.jsx`. Updated: `index.js`, `App.jsx`, `App.css`, `client.js`. No structural surprises — everything landed exactly where Day 2's architecture said it would.
+## What Changed From Day 5
+New: `generatePlan.js`, `streakStore.js`, `streak.json`, `streak.js`, `TodaysPlan.jsx`, `AllTasks.jsx`, `StreakBadge.jsx`. Updated: `tasks.js`, `index.js`, `App.jsx`, `App.css`, `client.js`. The application is now a complete, deployed MVP — no structural surprises, everything landed where Day 2's architecture said it would.
