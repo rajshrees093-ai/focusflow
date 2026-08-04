@@ -1,122 +1,98 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+// client/src/App.jsx
+// Day 6: wires TodaysPlan, AllTasks, StreakBadge together into a
+// complete MVP, plus the required challenge footer.
+
+import { useState, useEffect } from 'react';
+import NavTabs from './components/NavTabs';
+import TaskInput from './components/TaskInput';
+import ParsedTaskReview from './components/ParsedTaskReview';
+import TodaysPlan from './components/TodaysPlan';
+import AllTasks from './components/AllTasks';
+import StreakBadge from './components/StreakBadge';
+import { checkHealth } from './api/client';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [view, setView] = useState('plan');
+  const [serverStatus, setServerStatus] = useState('checking...');
+  const [parsedTasks, setParsedTasks] = useState([]);
+  const [confirmation, setConfirmation] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    checkHealth()
+      .then((data) => setServerStatus(data.message))
+      .catch(() => setServerStatus('Could not reach server'));
+  }, []);
+
+  function bumpRefresh() {
+    setRefreshKey((k) => k + 1);
+  }
+
+  function handleParsed(tasks) {
+    setParsedTasks(tasks);
+    setView('review');
+  }
+
+  function handleConfirmed(count) {
+    setConfirmation(`${count} task${count === 1 ? '' : 's'} added.`);
+    setParsedTasks([]);
+    setView('plan');
+    bumpRefresh();
+    setTimeout(() => setConfirmation(''), 4000);
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app">
+      <header>
+        <h1>FocusFlow</h1>
+        {(view === 'plan' || view === 'all') && (
+          <NavTabs activeTab={view} onChange={setView} />
+        )}
+        <StreakBadge refreshKey={refreshKey} />
+      </header>
+      <main>
+        {view === 'plan' && (
+          <div className="screen">
+            <div className="screen-header">
+              <h2>Today's Plan</h2>
+              <button onClick={() => setView('input')}>+ Add Tasks</button>
+            </div>
+            {confirmation && <p className="success-text">{confirmation}</p>}
+            <TodaysPlan refreshKey={refreshKey} onTaskChanged={bumpRefresh} />
+          </div>
+        )}
 
-      <div className="ticks"></div>
+        {view === 'all' && (
+          <div className="screen">
+            <div className="screen-header">
+              <h2>All Tasks</h2>
+              <button onClick={() => setView('input')}>+ Add Tasks</button>
+            </div>
+            {confirmation && <p className="success-text">{confirmation}</p>}
+            <AllTasks refreshKey={refreshKey} onTaskChanged={bumpRefresh} />
+          </div>
+        )}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        {view === 'input' && (
+          <TaskInput onParsed={handleParsed} onCancel={() => setView('plan')} />
+        )}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        {view === 'review' && (
+          <ParsedTaskReview
+            tasks={parsedTasks}
+            onConfirmed={handleConfirmed}
+            onBack={() => setView('input')}
+          />
+        )}
+
+        <p className="status">Backend status: {serverStatus}</p>
+      </main>
+      <footer className="app-footer">
+        Built with Claude as part of the AB Talks 60-Day Claude AI Challenge.
+      </footer>
+    </div>
+  );
 }
 
-export default App
+export default App;
