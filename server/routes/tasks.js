@@ -1,10 +1,11 @@
 // server/routes/tasks.js
-// Full CRUD for tasks, matching docs/API.md exactly:
-// GET /api/tasks, POST /api/tasks, PATCH /api/tasks/:id, DELETE /api/tasks/:id
+// Full CRUD for tasks, matching docs/API.md exactly.
+// Day 6 adds: streak recalculation when a task is newly marked complete.
 
 const express = require('express');
 const crypto = require('crypto');
 const { readTasks, writeTasks } = require('../store/taskStore');
+const { recalcStreakOnCompletion } = require('../store/streakStore');
 
 const router = express.Router();
 
@@ -33,7 +34,6 @@ function validateNewTask(body) {
   return errors;
 }
 
-// GET /api/tasks  (supports ?completed=true|false)
 router.get('/', (req, res) => {
   try {
     let tasks = readTasks();
@@ -50,7 +50,6 @@ router.get('/', (req, res) => {
   }
 });
 
-// POST /api/tasks
 router.post('/', (req, res) => {
   const errors = validateNewTask(req.body);
   if (errors.length) {
@@ -76,7 +75,6 @@ router.post('/', (req, res) => {
   }
 });
 
-// PATCH /api/tasks/:id
 router.patch('/:id', (req, res) => {
   try {
     const tasks = readTasks();
@@ -85,7 +83,9 @@ router.patch('/:id', (req, res) => {
       return res.status(404).json({ error: 'Task not found.' });
     }
 
+    const wasCompleted = tasks[index].completed;
     const updates = {};
+
     if (req.body.title !== undefined) {
       if (!req.body.title.trim()) return res.status(400).json({ error: 'Task title is required.' });
       updates.title = req.body.title.trim();
@@ -112,13 +112,17 @@ router.patch('/:id', (req, res) => {
 
     tasks[index] = { ...tasks[index], ...updates };
     writeTasks(tasks);
+
+    if (updates.completed === true && !wasCompleted) {
+      recalcStreakOnCompletion();
+    }
+
     res.json({ task: tasks[index] });
   } catch (err) {
     res.status(500).json({ error: 'Could not update task.' });
   }
 });
 
-// DELETE /api/tasks/:id
 router.delete('/:id', (req, res) => {
   try {
     const tasks = readTasks();
