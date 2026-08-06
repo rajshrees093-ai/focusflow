@@ -1,6 +1,5 @@
 // client/src/components/TodaysPlan.jsx
-// PRD FR-4: fetches incomplete tasks + a generated plan, merges them,
-// and renders in priority order with reasoning.
+// Day 7: polished loading/empty/error states. Same logic as Day 6.
 
 import { useState, useEffect } from 'react';
 import { fetchTasks, generatePlan, updateTask } from '../api/client';
@@ -49,15 +48,26 @@ export default function TodaysPlan({ refreshKey, onTaskChanged }) {
     }
   }
 
-  if (loading) return <p className="muted-text">Building your plan...</p>;
-  if (error) return <p className="error-text">{error}</p>;
-  if (message) return <p className="muted-text">{message}</p>;
+  if (loading) return <p className="loading-text">Building your plan...</p>;
+  if (error) return <p className="error-banner" role="alert">{error}</p>;
+  if (message) {
+    return (
+      <div className="empty-state">
+        <span className="empty-icon" aria-hidden="true">📋</span>
+        {message}
+      </div>
+    );
+  }
 
   return (
     <div className="plan-list">
       {items.map((item) => (
         <div className="plan-row" key={item.id}>
-          <input type="checkbox" onChange={() => handleComplete(item.id)} aria-label="Mark complete" />
+          <input
+            type="checkbox"
+            onChange={() => handleComplete(item.id)}
+            aria-label={`Mark "${item.title}" complete`}
+          />
           <div className="plan-row-body">
             <div className="plan-row-title">
               {item.order}. {item.title} <span className={`tag tag-${item.category.toLowerCase()}`}>{item.category}</span>

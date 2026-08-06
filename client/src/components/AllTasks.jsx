@@ -1,5 +1,5 @@
 // client/src/components/AllTasks.jsx
-// PRD FR-5, FR-6: full task list with complete/delete.
+// Day 7: polished loading/empty/error states. Same logic as Day 6.
 
 import { useState, useEffect } from 'react';
 import { fetchTasks, updateTask, deleteTask } from '../api/client';
@@ -36,8 +36,8 @@ export default function AllTasks({ refreshKey, onTaskChanged }) {
     }
   }
 
-  async function handleDelete(id) {
-    if (!window.confirm('Delete this task?')) return;
+  async function handleDelete(id, title) {
+    if (!window.confirm(`Delete "${title}"?`)) return;
     try {
       await deleteTask(id);
       onTaskChanged();
@@ -46,19 +46,37 @@ export default function AllTasks({ refreshKey, onTaskChanged }) {
     }
   }
 
-  if (loading) return <p className="muted-text">Loading tasks...</p>;
-  if (error) return <p className="error-text">{error}</p>;
-  if (tasks.length === 0) return <p className="muted-text">No tasks yet. Add your first ones above.</p>;
+  if (loading) return <p className="loading-text">Loading tasks...</p>;
+  if (error) return <p className="error-banner" role="alert">{error}</p>;
+  if (tasks.length === 0) {
+    return (
+      <div className="empty-state">
+        <span className="empty-icon" aria-hidden="true">✓</span>
+        No tasks yet. Add your first ones above.
+      </div>
+    );
+  }
 
   return (
     <div className="all-tasks-list">
       {tasks.map((task) => (
         <div className={`all-task-row ${task.completed ? 'completed' : ''}`} key={task.id}>
-          <input type="checkbox" checked={task.completed} onChange={() => toggleComplete(task)} />
+          <input
+            type="checkbox"
+            checked={task.completed}
+            onChange={() => toggleComplete(task)}
+            aria-label={`Mark "${task.title}" ${task.completed ? 'incomplete' : 'complete'}`}
+          />
           <span className="all-task-title">{task.title}</span>
           <span className={`tag tag-${task.category.toLowerCase()}`}>{task.category}</span>
           <span className={`tag tag-urgency-${task.urgency.toLowerCase()}`}>{task.urgency}</span>
-          <button className="icon-btn" onClick={() => handleDelete(task.id)} aria-label="Delete task">🗑</button>
+          <button
+            className="icon-btn"
+            onClick={() => handleDelete(task.id, task.title)}
+            aria-label={`Delete "${task.title}"`}
+          >
+            🗑
+          </button>
         </div>
       ))}
     </div>
