@@ -1,6 +1,7 @@
 // client/src/App.jsx
-// Day 6: wires TodaysPlan, AllTasks, StreakBadge together into a
-// complete MVP, plus the required challenge footer.
+// Day 7: same view-state logic as Day 6 — refinement adds a skip link,
+// a subtle connection-status dot (replacing raw debug text), and an
+// aria-live region so screen readers announce confirmations/errors.
 
 import { useState, useEffect } from 'react';
 import NavTabs from './components/NavTabs';
@@ -14,15 +15,15 @@ import './App.css';
 
 function App() {
   const [view, setView] = useState('plan');
-  const [serverStatus, setServerStatus] = useState('checking...');
+  const [serverOk, setServerOk] = useState(null); // null = checking, true/false after
   const [parsedTasks, setParsedTasks] = useState([]);
   const [confirmation, setConfirmation] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     checkHealth()
-      .then((data) => setServerStatus(data.message))
-      .catch(() => setServerStatus('Could not reach server'));
+      .then(() => setServerOk(true))
+      .catch(() => setServerOk(false));
   }, []);
 
   function bumpRefresh() {
@@ -44,6 +45,7 @@ function App() {
 
   return (
     <div className="app">
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <header>
         <h1>FocusFlow</h1>
         {(view === 'plan' || view === 'all') && (
@@ -51,14 +53,17 @@ function App() {
         )}
         <StreakBadge refreshKey={refreshKey} />
       </header>
-      <main>
+      <main id="main-content">
+        <div aria-live="polite">
+          {confirmation && <p className="success-text">{confirmation}</p>}
+        </div>
+
         {view === 'plan' && (
           <div className="screen">
             <div className="screen-header">
               <h2>Today's Plan</h2>
-              <button onClick={() => setView('input')}>+ Add Tasks</button>
+              <button className="btn" onClick={() => setView('input')}>+ Add Tasks</button>
             </div>
-            {confirmation && <p className="success-text">{confirmation}</p>}
             <TodaysPlan refreshKey={refreshKey} onTaskChanged={bumpRefresh} />
           </div>
         )}
@@ -67,9 +72,8 @@ function App() {
           <div className="screen">
             <div className="screen-header">
               <h2>All Tasks</h2>
-              <button onClick={() => setView('input')}>+ Add Tasks</button>
+              <button className="btn" onClick={() => setView('input')}>+ Add Tasks</button>
             </div>
-            {confirmation && <p className="success-text">{confirmation}</p>}
             <AllTasks refreshKey={refreshKey} onTaskChanged={bumpRefresh} />
           </div>
         )}
@@ -86,7 +90,10 @@ function App() {
           />
         )}
 
-        <p className="status">Backend status: {serverStatus}</p>
+        <div className="status-row" role="status">
+          <span className={`status-dot ${serverOk === true ? 'ok' : serverOk === false ? 'error' : ''}`} />
+          <span>{serverOk === null ? 'Connecting...' : serverOk ? 'Connected' : 'Server unreachable'}</span>
+        </div>
       </main>
       <footer className="app-footer">
         Built with Claude as part of the AB Talks 60-Day Claude AI Challenge.
